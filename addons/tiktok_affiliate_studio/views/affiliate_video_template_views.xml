@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_affiliate_video_template_tree" model="ir.ui.view">
+        <field name="name">affiliate.video.template.tree</field>
+        <field name="model">affiliate.video.template</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="campaign_type"/>
+                <field name="voice_requirement"/>
+                <field name="ready"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_affiliate_video_template_form" model="ir.ui.view">
+        <field name="name">affiliate.video.template.form</field>
+        <field name="model">affiliate.video.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="code"/>
+                        <field name="name"/>
+                        <field name="campaign_type"/>
+                        <field name="voice_requirement"/>
+                        <field name="ready"/>
+                        <field name="prompt"/>
+                        <field name="render_config"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_affiliate_video_template" model="ir.actions.act_window">
+        <field name="name">Video Templates</field>
+        <field name="res_model">affiliate.video.template</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

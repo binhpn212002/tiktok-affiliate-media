@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_affiliate_channel_system,affiliate.channel system,model_affiliate_channel,base.group_system,1,1,1,1
+access_affiliate_product_system,affiliate.product system,model_affiliate_product,base.group_system,1,1,1,1
+access_affiliate_campaign_system,affiliate.campaign system,model_affiliate_campaign,base.group_system,1,1,1,1
+access_affiliate_video_template_system,affiliate.video.template system,model_affiliate_video_template,base.group_system,1,1,1,1
+access_affiliate_video_system,affiliate.video system,model_affiliate_video,base.group_system,1,1,1,1
+access_affiliate_post_task_system,affiliate.post.task system,model_affiliate_post_task,base.group_system,1,1,1,1

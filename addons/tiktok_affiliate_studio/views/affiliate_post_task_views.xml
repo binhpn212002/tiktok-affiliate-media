@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_affiliate_post_task_tree" model="ir.ui.view">
+        <field name="name">affiliate.post.task.tree</field>
+        <field name="model">affiliate.post.task</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="channel_id"/>
+                <field name="video_id"/>
+                <field name="state"/>
+                <field name="published_at"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_affiliate_post_task_form" model="ir.ui.view">
+        <field name="name">affiliate.post.task.form</field>
+        <field name="model">affiliate.post.task</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="video_id" domain="[('state', '=', 'approved')]"/>
+                        <field name="channel_id"/>
+                        <field name="product_id"/>
+                        <field name="video_path"/>
+                        <field name="caption"/>
+                        <field name="hashtags"/>
+                        <field name="state"/>
+                        <field name="post_url" widget="url"/>
+                        <field name="published_at"/>
+                        <field name="manual_minutes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_affiliate_post_task" model="ir.actions.act_window">
+        <field name="name">Posting Tasks</field>
+        <field name="res_model">affiliate.post.task</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

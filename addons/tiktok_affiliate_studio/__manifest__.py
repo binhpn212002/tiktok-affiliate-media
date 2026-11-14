@@ -1,0 +1,20 @@
+{
+    "name": "TikTok Affiliate Studio",
+    "version": "17.0.1.0.0",
+    "category": "Marketing",
+    "summary": "Manage TikTok affiliate campaigns and video production",
+    "depends": ["base", "web"],
+    "data": [
+        "security/ir.model.access.csv",
+        "views/affiliate_channel_views.xml",
+        "views/affiliate_product_views.xml",
+        "views/affiliate_campaign_views.xml",
+        "views/affiliate_video_template_views.xml",
+        "views/affiliate_video_views.xml",
+        "views/affiliate_post_task_views.xml",
+        "views/menu.xml",
+    ],
+    "application": True,
+    "installable": True,
+    "license": "LGPL-3",
+}
