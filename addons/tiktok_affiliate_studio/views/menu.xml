@@ -4,7 +4,6 @@
     <menuitem id="menu_affiliate_channel" name="Channels" parent="menu_tiktok_affiliate_studio_root" action="action_affiliate_channel" sequence="10"/>
     <menuitem id="menu_affiliate_product" name="Products" parent="menu_tiktok_affiliate_studio_root" action="action_affiliate_product" sequence="20"/>
     <menuitem id="menu_affiliate_campaign" name="Campaigns" parent="menu_tiktok_affiliate_studio_root" action="action_affiliate_campaign" sequence="30"/>
-    <menuitem id="menu_affiliate_video_template" name="Video Templates" parent="menu_tiktok_affiliate_studio_root" action="action_affiliate_video_template" sequence="40"/>
     <menuitem id="menu_affiliate_video" name="Videos" parent="menu_tiktok_affiliate_studio_root" action="action_affiliate_video" sequence="50"/>
     <menuitem id="menu_affiliate_post_task" name="Posting Tasks" parent="menu_tiktok_affiliate_studio_root" action="action_affiliate_post_task" sequence="60"/>
 </odoo>

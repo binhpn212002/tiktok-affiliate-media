@@ -6,9 +6,7 @@
         <field name="arch" type="xml">
             <tree>
                 <field name="name"/>
-                <field name="shop_name"/>
-                <field name="sku"/>
-                <field name="tiktok_product_id"/>
+                <field name="product_url" widget="url"/>
                 <field name="channel_ids" widget="many2many_tags"/>
             </tree>
         </field>
@@ -22,13 +20,16 @@
                 <sheet>
                     <group>
                         <field name="name"/>
-                        <field name="shop_name"/>
-                        <field name="sku"/>
-                        <field name="tiktok_product_id"/>
                         <field name="product_url" widget="url"/>
                         <field name="channel_ids" widget="many2many_tags"/>
-                        <field name="image" widget="image"/>
                     </group>
+                    <field name="image_ids" widget="affiliate_product_images">
+                        <tree editable="bottom">
+                            <field name="upload" required="not url" readonly="url" filename="filename"/>
+                            <field name="filename" column_invisible="True"/>
+                            <field name="url" widget="url" readonly="1" required="0"/>
+                        </tree>
+                    </field>
                 </sheet>
             </form>
         </field>

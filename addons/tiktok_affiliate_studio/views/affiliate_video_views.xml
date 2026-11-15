@@ -8,9 +8,9 @@
                 <field name="name"/>
                 <field name="channel_id"/>
                 <field name="campaign_id"/>
-                <field name="template_id"/>
                 <field name="product_id"/>
                 <field name="state"/>
+                <field name="video_path" widget="url" text="Open video" invisible="not video_path"/>
             </tree>
         </field>
     </record>
@@ -20,18 +20,28 @@
         <field name="model">affiliate.video</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <button name="action_queue_render" type="object" string="Render"
+                            class="oe_highlight" invisible="state != 'draft' or render_status == 'queued'"/>
+                </header>
                 <sheet>
+                    <div class="mb-3">
+                        <a class="btn btn-secondary" role="button"
+                           href="/tiktok_affiliate_studio/static/samples/video-script-template.json"
+                           download="video-script-template.json">Download JSON Template</a>
+                    </div>
                     <group>
                         <field name="name"/>
                         <field name="campaign_id"/>
                         <field name="channel_id"/>
                         <field name="campaign_type"/>
-                        <field name="template_id" domain="[('campaign_type', '=', campaign_type)]"/>
                         <field name="product_id" domain="[('channel_ids', 'in', [channel_id])]" required="campaign_type == 'affiliate'"/>
-                        <field name="script_json"/>
+                        <field name="script_json" readonly="render_status == 'queued'"/>
+                        <field name="render_status"/>
+                        <field name="render_error" invisible="not render_error"/>
                         <field name="caption"/>
                         <field name="hashtags"/>
-                        <field name="video_path"/>
+                        <field name="video_path" widget="url"/>
                         <field name="state"/>
                     </group>
                 </sheet>

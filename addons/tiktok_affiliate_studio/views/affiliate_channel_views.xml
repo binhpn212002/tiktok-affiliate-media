@@ -7,6 +7,9 @@
             <tree>
                 <field name="name"/>
                 <field name="topic"/>
+                <field name="tiktok_status" optional="show"/>
+                <field name="tiktok_followers" optional="show" invisible="not tiktok_has_stats"/>
+                <field name="tiktok_has_stats" column_invisible="True"/>
                 <field name="timezone"/>
                 <field name="active"/>
             </tree>
@@ -18,6 +21,11 @@
         <field name="model">affiliate.channel</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <button name="action_connect_tiktok" type="object" string="Connect TikTok" class="oe_highlight"/>
+                    <button name="action_sync_tiktok" type="object" string="Sync TikTok"
+                            invisible="tiktok_status != 'connected'"/>
+                </header>
                 <sheet>
                     <group>
                         <field name="name"/>
@@ -25,6 +33,22 @@
                         <field name="timezone"/>
                         <field name="voice"/>
                         <field name="active"/>
+                    </group>
+                    <group string="TikTok">
+                        <field name="tiktok_status"/>
+                        <field name="tiktok_sync_error" invisible="not tiktok_sync_error"/>
+                        <field name="tiktok_synced_at" invisible="not tiktok_synced_at"/>
+                        <field name="tiktok_display_name" invisible="not tiktok_display_name"/>
+                        <field name="tiktok_username" invisible="not tiktok_username"/>
+                        <field name="tiktok_avatar_url" widget="url" invisible="not tiktok_avatar_url"/>
+                        <field name="tiktok_profile_url" widget="url" invisible="not tiktok_profile_url"/>
+                        <field name="tiktok_bio" invisible="not tiktok_bio"/>
+                        <field name="tiktok_verified" invisible="not tiktok_display_name"/>
+                        <field name="tiktok_has_stats" invisible="1"/>
+                        <field name="tiktok_followers" string="Followers" invisible="not tiktok_has_stats"/>
+                        <field name="tiktok_following" string="Following" invisible="not tiktok_has_stats"/>
+                        <field name="tiktok_likes" string="Likes" invisible="not tiktok_has_stats"/>
+                        <field name="tiktok_videos" string="Public videos" invisible="not tiktok_has_stats"/>
                     </group>
                 </sheet>
             </form>

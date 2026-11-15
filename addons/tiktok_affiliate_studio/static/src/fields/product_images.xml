@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tiktok_affiliate_studio.ProductImages" t-inherit="web.X2ManyField" t-inherit-mode="primary">
+        <xpath expr="//ListRenderer" position="before">
+            <FileUploader t-if="!props.readonly &amp;&amp; activeActions.create"
+                          multiUpload="true"
+                          acceptedFileExtensions="'.jpg,.jpeg,.png,.webp'"
+                          onClick="() => list.leaveEditMode()"
+                          onUploaded.bind="addImage">
+                <t t-set-slot="toggler">
+                    <button type="button" class="btn btn-secondary mb-2">Add images</button>
+                </t>
+            </FileUploader>
+        </xpath>
+    </t>
+</templates>
