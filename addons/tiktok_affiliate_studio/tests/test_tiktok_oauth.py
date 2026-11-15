@@ -52,3 +52,33 @@ class TestTikTokOAuth(TransactionCase):
         self.assertEqual(credential.access_token, 'next-access')
         self.assertEqual(self.channel.tiktok_sync_error, 'Temporary failure')
         self.assertEqual(self.channel.tiktok_status, 'connected')
+
+    def test_send_approved_video_and_confirm_inbox_delivery(self):
+        campaign = self.env['affiliate.campaign'].create({
+            'name': 'TikTok draft test', 'channel_id': self.channel.id, 'campaign_type': 'community',
+        })
+        video = self.env['affiliate.video'].create({
+            'name': 'TikTok draft test', 'campaign_id': campaign.id,
+            'state': 'approved', 'video_path': 'https://media.example.com/videos/test.mp4',
+        })
+        credential = self.env['affiliate.tiktok.credential'].sudo().create(
+            self.channel._tiktok_token_values(dict(self.token, scope='user.info.basic,video.upload')),
+        )
+        self.channel.tiktok_status = 'connected'
+        with (
+            patch.dict('os.environ', {'TIKTOK_DRAFT_MEDIA_PREFIX': 'https://media.example.com/videos/'}),
+            patch.object(tiktok_oauth, '_request', return_value={'data': {'publish_id': 'v_inbox_url~123'}}) as post,
+        ):
+            video.action_send_tiktok_draft()
+            with self.assertRaises(tiktok_oauth.UserError):
+                video.action_send_tiktok_draft()
+            post.assert_called_once_with(
+                'POST', tiktok_oauth.INBOX_URL,
+                json={'source_info': {'source': 'PULL_FROM_URL', 'video_url': video.video_path}},
+                headers={'Authorization': f'Bearer {credential.access_token}'},
+            )
+        self.assertEqual(video.tiktok_draft_status, 'processing')
+        with patch.object(tiktok_oauth, 'draft_status', return_value={'status': 'SEND_TO_USER_INBOX'}) as status:
+            video._cron_refresh_tiktok_drafts()
+        status.assert_called_once_with(credential.access_token, 'v_inbox_url~123')
+        self.assertEqual(video.tiktok_draft_status, 'inbox')

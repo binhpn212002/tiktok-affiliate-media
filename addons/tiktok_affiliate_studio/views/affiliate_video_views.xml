@@ -11,6 +11,10 @@
                 <field name="product_id"/>
                 <field name="state"/>
                 <field name="video_path" widget="url" text="Open video" invisible="not video_path"/>
+                <field name="tiktok_draft_status" optional="show"/>
+                <button name="action_send_tiktok_draft" type="object" string="Post Video"
+                        invisible="state != 'approved' or tiktok_draft_status not in [False, 'failed']"
+                        confirm="Send this video to the linked TikTok account's inbox? You can edit and publish it in TikTok."/>
             </tree>
         </field>
     </record>
@@ -23,6 +27,11 @@
                 <header>
                     <button name="action_queue_render" type="object" string="Render"
                             class="oe_highlight" invisible="state != 'draft' or render_status == 'queued'"/>
+                    <button name="action_send_tiktok_draft" type="object" string="Post Video"
+                            invisible="state != 'approved' or tiktok_draft_status not in [False, 'failed']"
+                            confirm="Send this video to the linked TikTok account's inbox? You can edit and publish it in TikTok."/>
+                    <button name="action_refresh_tiktok_draft" type="object" string="Check TikTok Status"
+                            invisible="tiktok_draft_status not in ['processing', 'inbox']"/>
                 </header>
                 <sheet>
                     <div class="mb-3">
@@ -43,6 +52,15 @@
                         <field name="hashtags"/>
                         <field name="video_path" widget="url"/>
                         <field name="state"/>
+                    </group>
+                    <group string="TikTok Draft" invisible="not tiktok_draft_status">
+                        <field name="tiktok_draft_status"/>
+                        <field name="tiktok_publish_id"/>
+                        <field name="tiktok_draft_checked_at"/>
+                        <field name="tiktok_draft_error" invisible="not tiktok_draft_error"/>
+                        <div class="text-muted" invisible="tiktok_draft_status != 'inbox'">
+                            Open the TikTok inbox notification to edit and publish the video.
+                        </div>
                     </group>
                 </sheet>
             </form>

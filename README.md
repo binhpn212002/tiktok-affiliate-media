@@ -23,3 +23,11 @@ In **Products**, click **Add images**, select one or more files, and save the pr
 4. Open a record under **Channels**, click **Connect TikTok**, and grant access on TikTok. **Sync TikTok** refreshes the profile on demand. A scheduled action also updates profiles and refreshes tokens near expiry. If TikTok revokes or expires a refresh token, connect again.
 
 See [Login Kit for Web](https://developers.tiktok.com/docs/en/login-kit-web) and [User Info scopes](https://developers.tiktok.com/docs/en/tiktok-api-v2-get-user-info).
+
+## Send a rendered video to the TikTok inbox
+
+1. Enable **Content Posting API → Upload** and add the `video.upload` scope in the TikTok app. For Sandbox, apply the changes and use a target user.
+2. Add and verify the R2 media URL prefix in TikTok Developer Portal under **URL properties**. Set `TIKTOK_DRAFT_MEDIA_PREFIX` in the Odoo process environment to that HTTPS prefix, for example `https://media.example.com/videos/`. Existing video URLs must begin with the verified prefix. Restart Odoo and reconnect the channel to grant `video.upload`.
+3. In **Videos**, render and approve the video, then click **Post Video** in the list or form. When the status is **Sent to TikTok inbox**, open the notification in the TikTok app to edit and publish. Use **Check TikTok Status** to refresh the status, including after publishing. Caption, hashtags, and affiliate products can be added in the TikTok app.
+
+See [TikTok Upload](https://developers.tiktok.com/docs/en/content-posting-api-reference-upload-video) and [media URL verification](https://developers.tiktok.com/docs/en/content-posting-api-media-transfer-guide#ownership-verification-rules).

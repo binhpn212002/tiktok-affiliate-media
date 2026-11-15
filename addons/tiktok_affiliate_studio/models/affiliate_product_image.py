@@ -1,8 +1,10 @@
 import base64
+import binascii
 import hashlib
 import io
 
 from PIL import Image
+from PIL import WebPImagePlugin  # noqa: F401  # Register WebP with Pillow after Odoo preloads its image plugins.
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -35,19 +37,36 @@ class AffiliateProductImage(models.Model):
     def create(self, vals_list):
         self.check_access_rights("create")
         uploads = []
-        for vals in vals_list:
+        for index, vals in enumerate(vals_list, start=1):
+            label = vals.get("filename") or _("Image %(index)s", index=index)
             upload = vals.get("upload")
             if not upload:
-                raise ValidationError(_("Choose an image file to upload."))
+                raise ValidationError(_("%(file)s: choose an image file to upload.", file=label))
             try:
                 data = base64.b64decode(upload, validate=True)
-                if not data or len(data) > _MAX_IMAGE_BYTES:
-                    raise ValidationError(_("Each image must be between 1 byte and 10 MB."))
+            except (ValueError, TypeError, binascii.Error) as error:
+                raise ValidationError(_(
+                    "%(file)s: the upload data is invalid. Remove this row and select the file again.",
+                    file=label,
+                )) from error
+
+            if not data or len(data) > _MAX_IMAGE_BYTES:
+                raise ValidationError(_("%(file)s: choose an image up to 10 MB.", file=label))
+            try:
                 with Image.open(io.BytesIO(data)) as image:
-                    extension, content_type = _IMAGE_TYPES[image.format]
+                    image_format = image.format
                     image.verify()
-            except (ValueError, OSError, KeyError, Image.DecompressionBombError) as error:
-                raise ValidationError(_("Choose a valid JPEG, PNG or WebP image.")) from error
+            except (ValueError, OSError, SyntaxError, Image.DecompressionBombError) as error:
+                raise ValidationError(_(
+                    "%(file)s: the image could not be read. Re-export it as JPEG, PNG or WebP.",
+                    file=label,
+                )) from error
+            if image_format not in _IMAGE_TYPES:
+                raise ValidationError(_(
+                    "%(file)s: detected %(format)s. Re-export it as JPEG, PNG or WebP.",
+                    file=label, format=image_format or _("unknown format"),
+                ))
+            extension, content_type = _IMAGE_TYPES[image_format]
             checksum = hashlib.sha256(data).hexdigest()
             key = f"product-images/{checksum}.{extension}"
             uploads.append((key, data, content_type))

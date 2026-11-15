@@ -5,6 +5,7 @@ import logging
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
+from ..services import tiktok_oauth
 from ..services.r2_storage import upload_objects
 from ..services.video_render import allowed_image_url, render_video
 
@@ -30,10 +31,33 @@ class AffiliateVideo(models.Model):
         default='idle', required=True, readonly=True, copy=False,
     )
     render_error = fields.Char(readonly=True, copy=False)
+    tiktok_publish_id = fields.Char(readonly=True, copy=False)
+    tiktok_draft_account = fields.Char(readonly=True, copy=False)
+    tiktok_draft_status = fields.Selection(
+        [('processing', 'Processing'), ('inbox', 'Sent to TikTok inbox'),
+         ('published', 'Published on TikTok'), ('failed', 'Failed')],
+        readonly=True, copy=False, index=True,
+    )
+    tiktok_draft_error = fields.Char(readonly=True, copy=False)
+    tiktok_draft_checked_at = fields.Datetime(readonly=True, copy=False)
     state = fields.Selection(
         [('draft', 'Draft'), ('rendered', 'Rendered'), ('approved', 'Approved')],
         required=True, default='draft',
     )
+
+    @api.onchange('product_id')
+    def _onchange_product_name(self):
+        if self.product_id:
+            self.name = self.product_id.name
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        products = self.env['affiliate.product']
+        vals_list = [dict(vals) for vals in vals_list]
+        for vals in vals_list:
+            if not vals.get('name') and vals.get('product_id'):
+                vals['name'] = products.browse(vals['product_id']).name
+        return super().create(vals_list)
 
     @api.constrains('campaign_id', 'product_id')
     def _check_campaign_inputs(self):
@@ -146,3 +170,85 @@ class AffiliateVideo(models.Model):
             video.write({'render_status': 'failed', 'render_error': message})
         if self.search_count([('render_status', '=', 'queued')], limit=1):
             self.env.ref('tiktok_affiliate_studio.ir_cron_render_video').sudo()._trigger()
+
+
+    def _lock_tiktok_draft(self):
+        tracked_fields = ['tiktok_publish_id', 'tiktok_draft_account', 'tiktok_draft_status', 'state', 'video_path']
+        self.flush_recordset(tracked_fields)
+        self.env.cr.execute("SELECT id FROM affiliate_video WHERE id = %s FOR UPDATE", [self.id])
+        self.invalidate_recordset(tracked_fields)
+
+    def _tiktok_draft_credential(self):
+        channel = self.channel_id
+        credential = channel._tiktok_credential()
+        if not credential or channel.tiktok_status != 'connected':
+            raise UserError(_("Connect this video's channel to TikTok first."))
+        if tiktok_oauth.DRAFT_SCOPE not in credential.scope.split(','):
+            raise UserError(_("Reconnect the channel and grant the video.upload permission."))
+        if credential.expires_at <= fields.Datetime.now():
+            raise UserError(_("Sync the TikTok channel to refresh its access token, then try again."))
+        return credential
+
+    def action_send_tiktok_draft(self):
+        self.ensure_one()
+        self.check_access_rights('write')
+        self.check_access_rule('write')
+        self._lock_tiktok_draft()
+        if self.tiktok_publish_id and self.tiktok_draft_status != 'failed':
+            raise UserError(_("This video has already been sent to TikTok."))
+        if self.state != 'approved' or not self.video_path:
+            raise UserError(_("Approve the rendered video before sending it to TikTok."))
+        credential = self._tiktok_draft_credential()
+        try:
+            publish_id = tiktok_oauth.send_draft(credential.access_token, self.video_path)
+        except tiktok_oauth.TikTokError as error:
+            raise UserError(str(error)) from None
+        self.write({
+            'tiktok_publish_id': publish_id,
+            'tiktok_draft_account': credential.open_id,
+            'tiktok_draft_status': 'processing',
+            'tiktok_draft_error': False,
+            'tiktok_draft_checked_at': fields.Datetime.now(),
+        })
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
+
+    def action_refresh_tiktok_draft(self):
+        self.ensure_one()
+        self.check_access_rights('write')
+        self.check_access_rule('write')
+        self._lock_tiktok_draft()
+        self._refresh_tiktok_draft()
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
+
+    def _refresh_tiktok_draft(self):
+        if not self.tiktok_publish_id or self.tiktok_draft_status not in ('processing', 'inbox'):
+            return
+        statuses = {
+            'PROCESSING_DOWNLOAD': 'processing',
+            'PROCESSING_UPLOAD': 'processing',
+            'SEND_TO_USER_INBOX': 'inbox',
+            'PUBLISH_COMPLETE': 'published',
+            'FAILED': 'failed',
+        }
+        values = {'tiktok_draft_checked_at': fields.Datetime.now(), 'tiktok_draft_error': False}
+        try:
+            credential = self._tiktok_draft_credential()
+            if credential.open_id != self.tiktok_draft_account:
+                raise UserError(_("Reconnect the TikTok account that received this draft to check its status."))
+            result = tiktok_oauth.draft_status(credential.access_token, self.tiktok_publish_id)
+            status = statuses.get(result.get('status'))
+            if status:
+                values['tiktok_draft_status'] = status
+            if status == 'failed':
+                reason = result.get('fail_reason') or 'unknown'
+                values['tiktok_draft_error'] = _("TikTok could not deliver the draft (%(reason)s).", reason=reason)
+        except UserError as error:
+            values['tiktok_draft_error'] = str(error)
+        self.write(values)
+
+    @api.model
+    def _cron_refresh_tiktok_drafts(self):
+        videos = self.search([('tiktok_draft_status', '=', 'processing')], order='tiktok_draft_checked_at, id', limit=20)
+        for video in videos:
+            video._lock_tiktok_draft()
+            video._refresh_tiktok_draft()

@@ -1,6 +1,6 @@
 {
     "name": "TikTok Affiliate Studio",
-    "version": "17.0.1.3.0",
+    "version": "17.0.1.4.0",
     "category": "Marketing",
     "summary": "Manage TikTok affiliate campaigns and video production",
     "depends": ["base", "web"],
